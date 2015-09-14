@@ -2,7 +2,7 @@ import unittest
 from unittest import TestCase
 from collections import Counter
 from word_count import add_word_count_to_counter, process_word
-from word_count import build_word_count_from_corpus
+from word_count import build_word_count_from_corpus, word_to_list_of_all_fragments
 
 
 class TestAddWordCountToCounter(TestCase):
@@ -49,6 +49,17 @@ class BuildWordCountFromCorpus(TestCase):
         most_common = word_count.most_common()
         self.assertEquals(most_common, expected)
 
+
+class WordToListOfAllFragments(TestCase):
+    def test_word_to_list_of_all_fragments_the(self):
+        expected = ['_he', 't_e', 'th_', '__e', '_h_', 't__', '___']
+        result = word_to_list_of_all_fragments('the')
+        self.assertEquals(result, expected)
+
+    def test_word_to_list_of_all_fragments_to(self):
+        expected = ['_o', 't_', '__']
+        result = word_to_list_of_all_fragments('to')
+        self.assertEquals(result, expected)
 
 if __name__ == "__main__":
     unittest.main()
