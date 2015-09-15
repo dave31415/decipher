@@ -130,7 +130,6 @@ def modify_each_letter(translate, word_count, ciphered_text):
 
 def decipher_encrypted_file():
     #try to keep memory usage < 1 GB
-    start = time.time()
     quick = False
     cheat = False
     true_translation = true_translation_dictionary()
@@ -211,12 +210,16 @@ def decipher_encrypted_file():
         if k in ciphered_text:
             print k, v, (v == true_translation[k])
 
-    max_like = get_maximum_likelihood_values(pair_counts, ciphered_text)
-
-    finish = time.time()
-    runtime = finish - start
-    print "runtime: %0.1f seconds" % runtime
-    return pair_counts, max_like, translate, word_count
+    return translate
 
 if __name__ == "__main__":
-    declipher_encrypted_file()
+    start = time.time()
+    translate_solution = decipher_encrypted_file()
+    true_translation = true_translation_dictionary()
+    for letter in alphabet:
+        assert translate_solution(letter) == true_translation[letter]
+    fileio.write_solution(translate_solution)
+    finish = time.time()
+    runtime = finish - start
+    print "Success"
+    print "runtime: %0.1f seconds" % runtime

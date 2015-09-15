@@ -2,6 +2,8 @@
 # is just a dictionary with keys like ('a','y'), for all letter
 # pairs, avoids the need for numpy and numpy matrices
 
+#TODO: add tests, docstrings for these
+
 from alphabet import alphabet
 from collections import Counter
 
