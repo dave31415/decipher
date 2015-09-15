@@ -79,38 +79,46 @@ def get_paircounts_translation_iteratively(ciphered_words, translate, word_count
         for k, v in translation_guess.iteritems():
             if k in ciphered_text:
                 translate[k] = v
-        num_trans = number_of_translated_words(translate, word_count, ciphered_text)
+        num_trans, un_matched_ciphered_letters = number_of_translated_words(translate, word_count, ciphered_text)
         print "num matched words: %s" % num_trans
 
     return pair_counts, entropy, max_like
 
 
 def number_of_translated_words(translate, word_count, ciphered_text):
-    deciphered_words = [translate(process_word(word)) for word in ciphered_text.split()]
+    ciphered_words = [process_word(word) for word in ciphered_text.split()]
+    deciphered_words = [translate(word) for word in ciphered_words]
 
     matched_words = [word for word in deciphered_words if word in word_count]
     n_matched_words = len(matched_words)
     all_words = len(deciphered_words)
     print "n matched_words: %s, all_words: %s" % (n_matched_words, all_words)
-    non_matched_words = [word for word in deciphered_words if word not in word_count]
+    un_matched_words = [word for word in deciphered_words if word not in word_count]
+
+    un_matched_ciphered_words = [word for word in ciphered_words if translate(word) not in word_count]
 
     print "matched words"
     print matched_words
     print
-    print "non-matched words"
-    print non_matched_words
+    print "un-matched words"
+    print un_matched_words
 
-    return n_matched_words
+    unmatched_string = ' '.join(un_matched_ciphered_words)
+    un_matched_ciphered_letters = sorted(list({letter for letter in unmatched_string if letter in alphabet}))
+
+    print "num unmatched ciphered letters: %s" % len(un_matched_ciphered_letters)
+    print un_matched_ciphered_letters
+    return n_matched_words, un_matched_ciphered_letters
 
 
 def modify_each_letter(translate, word_count, ciphered_text):
-    num_max = number_of_translated_words(translate, word_count, ciphered_text)
-    for ciphered_letter in alphabet:
+    num_max, un_matched_ciphered_letters = number_of_translated_words(translate, word_count, ciphered_text)
+    for ciphered_letter in un_matched_ciphered_letters:
         for deciphered_letter in alphabet:
             translate_copy = translate.clone()
             translate_copy[ciphered_letter] = deciphered_letter
             print "%s->%s" % (ciphered_letter, deciphered_letter)
-            num = number_of_translated_words(translate_copy, word_count, ciphered_text)
+            num, unmatched_letters = number_of_translated_words(translate_copy, word_count, ciphered_text)
             if num > num_max:
                 print "New best, num_words matched: %s" %num
                 translate[ciphered_letter] = deciphered_letter
@@ -136,12 +144,12 @@ def decipher_encrypted_file():
     word_count = build_word_count_from_corpus()
     print "words in word_count: %s" % len(word_count)
     #compress it a bit
-    word_count = {word: count for word, count in word_count.iteritems()
-                  if len(word) <= word_length_max and count >= frequency_min}
-    print "words in shortened word_count: %s" % len(word_count)
+    word_count_smaller = {word: count for word, count in word_count.iteritems()
+                          if len(word) <= word_length_max and count >= frequency_min}
+    print "words in shortened word_count: %s" % len(word_count_smaller)
     print "word_length_max: %s, frequency_min: %s" % (word_length_max, frequency_min)
     print 'building fragment lookup'
-    fragment_lookup = word_list_to_fragment_lookup(word_count.keys())
+    fragment_lookup = word_list_to_fragment_lookup(word_count_smaller.keys())
     print "number of fragments: %s" % len(fragment_lookup)
     print "reading and processing encrypted file"
     ciphered_text = readers.read_encoded_text()
