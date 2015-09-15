@@ -1,4 +1,4 @@
-from readers import read_corpus_line_by_line
+from fileio import read_corpus_line_by_line
 from collections import Counter, defaultdict
 import re
 from itertools import combinations

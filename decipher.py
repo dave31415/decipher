@@ -6,6 +6,7 @@ from letter_matrix import make_pair_counter, normalize_pair_counts
 from translate import Translator, true_translation_dictionary
 import math
 import time
+from logger import logger
 
 
 def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts):
@@ -30,8 +31,7 @@ def get_normalized_paircounts(ciphered_words, translate, word_count,
     total_counts = 0.0
     for pair_key, counts in pair_counts.iteritems():
         total_counts += counts
-    #print "total matching word count: %s" % total_counts
-    normalize_pair_counts(pair_counts, niter=100)
+    normalize_pair_counts(pair_counts, niter=50)
     return pair_counts
 
 
@@ -129,6 +129,7 @@ def modify_each_letter(translate, word_count, ciphered_text):
 
 
 def decipher_encrypted_file():
+    logger.debug("Starting decipher")
     #try to keep memory usage < 1 GB
     quick = False
     cheat = False
@@ -156,40 +157,27 @@ def decipher_encrypted_file():
     ciphered_text = fileio.read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
-    if cheat:
-        for xx in xrange(10):
-            print "cheating"
-        if True:
-            translate['y'] = 'y'
-            translate['i'] = 'p'
-        else:
-            n_cheat = 5
-            import random
-            items = true_translation.items()
-            random.shuffle(items)
-            for key, value in true_translation.items()[0:n_cheat]:
-                print 'cheating: %s-> %s' % (key, value)
-                translate[key] = value
-
     n_iter = 30
-    pair_counts = get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
-                                           fragment_lookup, ciphered_text, iterations=n_iter)
+    pair_counts, entropy, max_like = get_paircounts_translation_iteratively(
+        ciphered_words, translate, word_count, fragment_lookup, ciphered_text,
+        iterations=n_iter)
 
-    results = []
-    for ciphered_letter in alphabet:
-        # delete each and try again to fix incorrect matches
-        print "deleted letter: %s" % ciphered_letter
-        if ciphered_letter not in translate:
-            continue
-        del translate[ciphered_letter]
-        pair_counts, entropy, max_like = \
-            get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
-                                                   fragment_lookup, ciphered_text,
-                                                   iterations=n_iter, top_start=20)
-        results.append((max_like, entropy))
-        print translate(ciphered_text)
+    if False:
+        results = []
+        for ciphered_letter in alphabet:
+            # delete each and try again to fix incorrect matches
+            print "deleted letter: %s" % ciphered_letter
+            if ciphered_letter not in translate:
+                continue
+            del translate[ciphered_letter]
+            pair_counts, entropy, max_like = \
+                get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
+                                                       fragment_lookup, ciphered_text,
+                                                       iterations=n_iter, top_start=20)
+            results.append((max_like, entropy))
+            print translate(ciphered_text)
 
-    print '\n------------\n'
+        print '\n------------\n'
 
     pair_count_items = [(pair_key, count) for pair_key, count in pair_counts.items()
                         if pair_key[0] in ciphered_text]
@@ -202,7 +190,7 @@ def decipher_encrypted_file():
     print translate(ciphered_text)
 
     if True:
-        print 'print modiying each letter to maximize number of words'
+        print 'print modifying each letter to maximize number of words'
         modify_each_letter(translate, word_count, ciphered_text)
 
     print 'Final solution\n-------------------\n'
@@ -210,6 +198,7 @@ def decipher_encrypted_file():
         if k in ciphered_text:
             print k, v, (v == true_translation[k])
 
+    logger.debug("Finished decipher")
     return translate
 
 if __name__ == "__main__":
