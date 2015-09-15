@@ -2,9 +2,9 @@ from fileio import read_corpus_line_by_line
 from collections import Counter, defaultdict
 import re
 from itertools import combinations
-from alphabet import unknown_letter
+from params import unknown_letter, regex_string, parameters
 
-regex_expression = re.compile('[^a-z]')
+regex_expression = re.compile(regex_string)
 
 
 def add_word_count_to_counter(string, counter):
@@ -66,12 +66,13 @@ def word_to_list_of_all_fragments(word):
 def word_list_to_fragment_lookup(word_list):
     """
     :param word_list: a list of processed words
-    :return:
+    :return: defaultdict(list) used to lookup possible words from fragment
     """
-    # don't consider very long words because they are probably incorrect
-    # and are time/memory hogs
     lookup = defaultdict(list)
-    word_length_max = 15
+    # don't consider very long words because they are probably incorrect
+    # and are time/memory hogs (produce too many fragments)
+    # could instead put limit on number of unknown characters in fragment
+    word_length_max = parameters['max_length_word_to_fragment']
     for word in word_list:
         if len(word) < word_length_max:
             fragment_list = word_to_list_of_all_fragments(word)

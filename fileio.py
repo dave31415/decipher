@@ -1,4 +1,4 @@
-data_dir = 'data'
+from params import data_dir
 from translate import Translator
 
 
@@ -7,6 +7,7 @@ def read_ciphered_text():
     :return: full string of the encoded text file, lowercase
     """
     filename = "encoded-en.txt"
+    # filename = "encoded-en-smaller-15.txt"
     return open("%s/%s" % (data_dir, filename), 'rU').read().lower()
 
 

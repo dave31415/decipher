@@ -1,5 +1,5 @@
 from word_count import process_word
-from alphabet import alphabet
+from params import alphabet, parameters
 from letter_matrix import make_pair_counter, normalize_pair_counts
 from translate import true_translation_dictionary
 import math
@@ -28,7 +28,7 @@ def get_normalized_paircounts(ciphered_words, translate, word_count,
     total_counts = 0.0
     for pair_key, counts in pair_counts.iteritems():
         total_counts += counts
-    normalize_pair_counts(pair_counts, niter=50)
+    normalize_pair_counts(pair_counts)
     return pair_counts
 
 
@@ -56,8 +56,12 @@ def get_translation_guess_from_max_like(max_like, occurrence_min=5, top=10):
 
 
 def get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
-                                           fragment_lookup, ciphered_text,
-                                           iterations=30, top_start=10):
+                                           fragment_lookup, ciphered_text):
+    # number of total iterations
+    iterations = parameters['paircounts_solver_iterations']
+    # number of highest likelihood letters to select to be fixed after the
+    # first iterations. Increases by one letter thereafter.
+    top_start = parameters['paircounts_solver_num_top_start']
     for iteration in xrange(iterations):
 
         pair_counts = get_normalized_paircounts(ciphered_words, translate, word_count,
@@ -66,7 +70,13 @@ def get_paircounts_translation_iteratively(ciphered_words, translate, word_count
         logger.debug("\t\titer: %s, entropy: %s" % (iteration, entropy))
 
         max_like = get_maximum_likelihood_values(pair_counts, ciphered_text)
-        om = 5-iteration/5.0
+        # parameters definition how occurence min starts our and
+        # reduces with each iteration
+        # idea is that you don't want to fix the letters that occur the least
+        # too early in the process as they are probably least well determined
+        om_start = parameters['paircounts_solver_occurrence_min_start']
+        om_sub_per_iter = parameters['paircounts_solver_occurrence_reduction_per_iteration']
+        om = om_start - om_sub_per_iter
         top = int(top_start + iteration)
         logger.debug("occurrence_min: %s, top: %s" % (om, top))
         translation_guess = get_translation_guess_from_max_like(max_like,

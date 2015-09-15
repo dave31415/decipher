@@ -4,14 +4,14 @@
 
 #TODO: add tests, docstrings for these
 
-from alphabet import alphabet
+from params import alphabet, parameters
 from collections import Counter
 from logger import logger
 
 
 def make_pair_counter():
     #make a counter, but initialize with a very small number
-    epsilon = 1e-2
+    epsilon = parameters['pair_counter_epsilon']
     pair_count = Counter()
     for encrypted_letter in alphabet:
         for letter in alphabet:
@@ -52,9 +52,10 @@ def normalize_cols(pair_count):
     logger.debug("Max row margin error: %s" % max_margin_error)
 
 
-def normalize_pair_counts(pair_count, niter=100):
+def normalize_pair_counts(pair_count):
     # use the Sinkhorn-Knopp algorithm to convert
     # the pair_counts into a doubly stochastic matrix
+    niter = parameters['normalization_iterations']
     for iteration in xrange(niter):
         logger.debug("normalize iteration: %s" % iteration)
         normalize_rows(pair_count)

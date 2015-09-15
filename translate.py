@@ -1,4 +1,4 @@
-from alphabet import alphabet, unknown_letter
+from params import alphabet, unknown_letter
 
 
 class Translator(dict):

@@ -1,8 +1,10 @@
+# main pipeline for running deciphering on file
+
 import time
 import fileio
 from word_count import build_word_count_from_corpus, word_list_to_fragment_lookup
 from word_count import process_word
-from alphabet import alphabet
+from params import alphabet, parameters
 from translate import Translator, true_translation_dictionary
 import solve
 from logger import logger
@@ -11,18 +13,15 @@ from logger import logger
 def decipher_encrypted_file():
     logger.debug("Starting decipher")
     true_translation = true_translation_dictionary()
-
-    word_length_max = 9
-    frequency_min = 20
+    frequency_min = parameters['min_frequency_word_to_fragment']
 
     logger.debug('building word counter')
     word_count = build_word_count_from_corpus()
     logger.debug("words in word_count: %s" % len(word_count))
     #compress it a bit
     word_count_smaller = {word: count for word, count in word_count.iteritems()
-                          if len(word) <= word_length_max and count >= frequency_min}
+                          if count >= frequency_min}
     logger.debug("words in shortened word_count: %s" % len(word_count_smaller))
-    logger.debug("word_length_max: %s, frequency_min: %s" % (word_length_max, frequency_min))
     logger.debug("building fragment lookup")
     fragment_lookup = word_list_to_fragment_lookup(word_count_smaller.keys())
     logger.debug("number of fragments: %s" % len(fragment_lookup))
@@ -32,7 +31,7 @@ def decipher_encrypted_file():
     translate = Translator()
     solve.get_paircounts_translation_iteratively(
         ciphered_words, translate, word_count, fragment_lookup,
-        ciphered_text, iterations=30)
+        ciphered_text)
 
     logger.debug('modifying each letter to maximize number of words')
     solve.modify_each_letter(translate, word_count, ciphered_text)
@@ -49,8 +48,16 @@ if __name__ == "__main__":
     start = time.time()
     translate_solution = decipher_encrypted_file()
     true_translation = true_translation_dictionary()
+    ciphered_text = fileio.read_ciphered_text()
+    success = True
     for letter in alphabet:
-        assert translate_solution(letter) == true_translation[letter]
+        if letter in ciphered_text:
+            result = translate_solution(letter)
+            expected = true_translation[letter]
+            if result != expected:
+                print "Incorect: letter=%s, expected=%s, result=%s" % (letter, expected, result)
+                success = False
+    assert success
     fileio.write_solution(translate_solution)
     finish = time.time()
     runtime = finish - start
