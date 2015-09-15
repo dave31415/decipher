@@ -1,6 +1,6 @@
 import unittest
 from unittest import TestCase
-from readers import read_encoded_text, read_corpus_line_by_line
+from fileio import read_encoded_text, read_corpus_line_by_line
 
 
 class TestReadEncodedText(TestCase):

@@ -21,4 +21,3 @@ def read_corpus_line_by_line():
             yield line.strip().lower()
 
 
-

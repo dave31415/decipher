@@ -1,10 +1,11 @@
-import readers
+import fileio
 from word_count import build_word_count_from_corpus, word_list_to_fragment_lookup
 from word_count import process_word
 from alphabet import alphabet
 from letter_matrix import make_pair_counter, normalize_pair_counts
 from translate import Translator, true_translation_dictionary
 import math
+import time
 
 
 def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts):
@@ -129,6 +130,7 @@ def modify_each_letter(translate, word_count, ciphered_text):
 
 def decipher_encrypted_file():
     #try to keep memory usage < 1 GB
+    start = time.time()
     quick = False
     cheat = False
     true_translation = true_translation_dictionary()
@@ -152,7 +154,7 @@ def decipher_encrypted_file():
     fragment_lookup = word_list_to_fragment_lookup(word_count_smaller.keys())
     print "number of fragments: %s" % len(fragment_lookup)
     print "reading and processing encrypted file"
-    ciphered_text = readers.read_encoded_text()
+    ciphered_text = fileio.read_encoded_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
     if cheat:
@@ -210,6 +212,10 @@ def decipher_encrypted_file():
             print k, v, (v == true_translation[k])
 
     max_like = get_maximum_likelihood_values(pair_counts, ciphered_text)
+
+    finish = time.time()
+    runtime = finish - start
+    print "runtime: %0.1f seconds" % runtime
     return pair_counts, max_like, translate, word_count
 
 if __name__ == "__main__":
