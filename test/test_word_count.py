@@ -2,7 +2,8 @@ import unittest
 from unittest import TestCase
 from collections import Counter
 from word_count import add_word_count_to_counter, process_word
-from word_count import build_word_count_from_corpus, word_to_list_of_all_fragments
+from word_count import build_word_count_from_corpus
+from word_count import word_to_list_of_all_fragments, word_list_to_fragment_lookup
 
 
 class TestAddWordCountToCounter(TestCase):
@@ -60,6 +61,19 @@ class WordToListOfAllFragments(TestCase):
         expected = ['_o', 't_', '__']
         result = word_to_list_of_all_fragments('to')
         self.assertEquals(result, expected)
+
+
+class WordListToFragmentLookup(TestCase):
+    def test_word_list_to_fragment_lookup(self):
+        word_list = ['and', 'are', 'any', 'thisisanabsurdlylongwordthatisfake']
+        lookup = word_list_to_fragment_lookup(word_list)
+        # check explicitly that 'a__' matches three words
+        self.assertEquals(lookup['a__'], ['and', 'are', 'any'])
+        # check the whole thing is correct
+        expected = ['__e', '__d', '_ny', '_n_', 'a__', '_re', 'a_y',
+                    'ar_', '_r_', 'a_e', 'a_d', '___', 'an_', '__y', '_nd']
+        self.assertEquals(lookup.keys(), expected)
+
 
 if __name__ == "__main__":
     unittest.main()

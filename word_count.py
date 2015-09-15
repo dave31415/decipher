@@ -1,5 +1,5 @@
 from readers import read_corpus_line_by_line
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 from itertools import combinations
 from alphabet import unknown_letter
@@ -30,7 +30,7 @@ def process_word(word):
     return result
 
 
-def build_word_count_from_corpus(lines_max=None):
+def build_word_count_from_corpus(lines_max=100000000000):
     """
     :param lines_max: maximum lines to consider, default is all
     :return: Counter object with count of all processed words
@@ -60,3 +60,20 @@ def word_to_list_of_all_fragments(word):
             obscured_word = ''.join(word_as_list_copy)
             fragment_list.append(obscured_word)
     return fragment_list
+
+
+def word_list_to_fragment_lookup(word_list):
+    """
+    :param word_list: a list of processed words
+    :return:
+    """
+    # don't consider very long words because they are probably incorrect
+    # and are time/memory hogs
+    lookup = defaultdict(list)
+    word_length_max = 15
+    for word in word_list:
+        if len(word) < word_length_max:
+            fragment_list = word_to_list_of_all_fragments(word)
+            for fragment in fragment_list:
+                lookup[fragment].append(word)
+    return lookup
