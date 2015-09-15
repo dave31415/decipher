@@ -154,7 +154,7 @@ def decipher_encrypted_file():
     fragment_lookup = word_list_to_fragment_lookup(word_count_smaller.keys())
     print "number of fragments: %s" % len(fragment_lookup)
     print "reading and processing encrypted file"
-    ciphered_text = fileio.read_encoded_text()
+    ciphered_text = fileio.read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
     if cheat:

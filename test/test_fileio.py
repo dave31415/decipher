@@ -1,11 +1,11 @@
 import unittest
 from unittest import TestCase
-from fileio import read_encoded_text, read_corpus_line_by_line
+from fileio import read_ciphered_text, read_corpus_line_by_line
 
 
 class TestReadEncodedText(TestCase):
     def setUp(self):
-        self.text = read_encoded_text()
+        self.text = read_ciphered_text()
 
     def test_length_is_correct(self):
         self.assertEquals(len(self.text), 810)

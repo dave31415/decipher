@@ -3,10 +3,11 @@ from alphabet import alphabet, unknown_letter
 
 class Translator(dict):
     # a class that acts like a dictionary for holding letter to letter translations
-    # but has a 'call' method (i.e. round parens) which makes a more refined translation
-    # that converts known letters, converts others not in dictionary but in the alphabet
-    # to the unknown_letter and returns every other character (e.g. punctuation) unchanged
-    # 'call' can also be called on a string and it will convert each letter of string
+    # but has a 'call' method (i.e. round parens) which makes a more refined
+    # translation that converts known letters, converts others not in dictionary
+    # but in the alphabet to the 'unknown_letter' and returns every other character
+    # (e.g. punctuation) unchanged. 'call' can also be called on a string and it
+    # will convert each letter of string
     def __call__(self, key):
         assert isinstance(key, str)
         if len(key) > 1:
