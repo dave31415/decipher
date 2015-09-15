@@ -1,6 +1,6 @@
-# some utilities for dealing with a simple matrix which
-# is just a dictionary with keys like ('a','y'), for all letter
-# pairs, avoids the need for numpy and numpy matrices
+# some utilities for dealing with a simple matrix defined as
+# a dictionary with keys like ('a','y'), for all letter pairs
+# avoids the need for numpy dependency
 
 #TODO: add tests, docstrings for these
 
