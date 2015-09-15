@@ -25,7 +25,8 @@ def process_word(word):
     :param word: string
     :return: string lower case with non-alphabetical letters removed
     """
-    #remove non-alphabetical characters
+    # remove non-alphabetical characters
+    # note, this isn't yet generalized to handle any defintion of alphabet
     result = regex_expression.sub('', word.lower())
     return result
 
