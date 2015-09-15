@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("decipher")
 handler = logging.FileHandler('hello.log')
 logger.addHandler(handler)
