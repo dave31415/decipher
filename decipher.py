@@ -1,26 +1,10 @@
 import readers
 from word_count import build_word_count_from_corpus, word_list_to_fragment_lookup
 from word_count import process_word
-from alphabet import alphabet, unknown_letter
-from collections import Counter
-
-
-class Translator(dict):
-    def __call__(self, key):
-        assert isinstance(key, str)
-        if len(key) > 1:
-            # recursive call on each letter
-            return ''.join([self.__call__(letter) for letter in key])
-        if key in self:
-            return self[key]
-
-        if key in alphabet:
-            # in alphabet but no translation yet
-            # return 'unknown_letter'
-            return unknown_letter
-
-        # not in alphabet, leave as is
-        return key
+from alphabet import alphabet
+from letter_matrix import make_pair_counter, normalize_pair_counts
+from translate import Translator, true_translation_dictionary
+import math
 
 
 def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts):
@@ -37,95 +21,115 @@ def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pai
             pair_counts[pair_key] += counts
 
 
-def normalize_rows(pair_count):
-    for encrypted_letter in alphabet:
-        total = 0.0
-        for letter in alphabet:
-            pair_key = (encrypted_letter, letter)
-            count = pair_count[pair_key]
-            total += count
-        for letter in alphabet:
-            pair_key = (encrypted_letter, letter)
-            pair_count[pair_key] /= total
+def get_normalized_paircounts(ciphered_words, translate, word_count,
+                              fragment_lookup):
+    pair_counts = make_pair_counter()
+    for ciphered_word in ciphered_words:
+        update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts)
+    total_counts = 0.0
+    for pair_key, counts in pair_counts.iteritems():
+        total_counts += counts
+    #print "total matching word count: %s" % total_counts
+    normalize_pair_counts(pair_counts, niter=100)
+    return pair_counts
 
 
-def normalize_cols(pair_count):
-    for letter in alphabet:
-        total = 0.0
-        for encrypted_letter in alphabet:
-            pair_key = (encrypted_letter, letter)
-            count = pair_count[pair_key]
-            total += count
-        for encrypted_letter in alphabet:
-            pair_key = (encrypted_letter, letter)
-            pair_count[pair_key] /= total
+def get_maximum_likelihood_values(pair_counts, ciphered_text):
+    true_translation = true_translation_dictionary()
+    max_like = {}
+    for ciphered_letter in alphabet:
+        like_max = 0.0
+        for deciphered_letter in alphabet:
+            pair_key = (ciphered_letter, deciphered_letter)
+            like = pair_counts[pair_key]
+            if like > like_max:
+                like_max = like
+                occurrence = ciphered_text.count(ciphered_letter)
+                correct = true_translation[ciphered_letter] == deciphered_letter
+                max_like[ciphered_letter] = (deciphered_letter, like, occurrence, correct)
+    return max_like
 
 
-def normalize_pair_counts(pair_count, niter=100):
-    # use the Sinkhorn-Knopp algorithm to convert
-    # the pair_counts into a doubly stochastic matrix
-    for iteration in xrange(niter):
-        normalize_rows(pair_count)
-        normalize_cols(pair_count)
-    normalize_rows(pair_count)
+def get_translation_guess_from_max_like(max_like, occurrence_min=5, top=10):
+    items = [item for item in max_like.items() if item[1][2] >= occurrence_min]
+    items_sorted = sorted(items, key=lambda x: -x[1][1])
+    items_top = items_sorted[0: top]
+    #for item in items_top:
+    #    print item
+    return {k: v[0] for k, v in items_top}
 
 
-def make_pair_counter():
-    #make a counter, but initialize with a very small number
-    pair_counts = Counter()
-    epsilon = 1e-2
-    pair_count = Counter()
-    for encrypted_letter in alphabet:
-        for letter in alphabet:
-            pair_key = (encrypted_letter, letter)
-            pair_count[pair_key] = epsilon
-    return pair_count
+def get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
+                                           fragment_lookup, ciphered_text,
+                                           iterations=30, top_start=10):
+    pair_counts, entropy, max_like = None, None, None
+    for iteration in xrange(iterations):
+
+        pair_counts = get_normalized_paircounts(ciphered_words, translate, word_count,
+                                                fragment_lookup)
+        entropy = sum([-i*math.log(i) for i in pair_counts.values()])
+        print "\t\titer: %s, entropy: %s" % (iteration, entropy)
+
+        max_like = get_maximum_likelihood_values(pair_counts, ciphered_text)
+        om = 5-iteration/5.0
+        top = int(top_start + iteration)
+        print "occurrence_min: %s, top: %s" % (om, top)
+        translation_guess = get_translation_guess_from_max_like(max_like,
+                                                                occurrence_min=om, top=top)
+        for k, v in translation_guess.iteritems():
+            if k in ciphered_text:
+                translate[k] = v
+        num_trans = number_of_translated_words(translate, word_count, ciphered_text)
+        print "num matched words: %s" % num_trans
+
+    return pair_counts, entropy, max_like
 
 
-def true_translation_dictionary():
-    translation_dict = {
-        'a': 'c',
-        'b': 'u',
-        'c': 'a',
-        'd': unknown_letter,
-        'e': 'x',
-        'f': 'm',
-        'g': 'b',
-        'h': 'i',
-        'i': 'p',
-        'j': 'n',
-        'k': 'l',
-        'l': 'e',
-        'm': 'h',
-        'n': 'o',
-        'o': 'k',
-        'p': 'g',
-        'q': unknown_letter,
-        'r': 's',
-        's': 'd',
-        't': unknown_letter,
-        'u': 't',
-        'v': 'v',
-        'w': 'r',
-        'x': 'f',
-        'y': 'y',
-        'z': 'w'
-    }
+def number_of_translated_words(translate, word_count, ciphered_text):
+    deciphered_words = [translate(process_word(word)) for word in ciphered_text.split()]
 
-    return translation_dict
+    matched_words = [word for word in deciphered_words if word in word_count]
+    n_matched_words = len(matched_words)
+    all_words = len(deciphered_words)
+    print "n matched_words: %s, all_words: %s" % (n_matched_words, all_words)
+    non_matched_words = [word for word in deciphered_words if word not in word_count]
+
+    print "matched words"
+    print matched_words
+    print
+    print "non-matched words"
+    print non_matched_words
+
+    return n_matched_words
 
 
-def declipher_encrypted_file():
+def modify_each_letter(translate, word_count, ciphered_text):
+    num_max = number_of_translated_words(translate, word_count, ciphered_text)
+    for ciphered_letter in alphabet:
+        for deciphered_letter in alphabet:
+            translate_copy = translate.clone()
+            translate_copy[ciphered_letter] = deciphered_letter
+            print "%s->%s" % (ciphered_letter, deciphered_letter)
+            num = number_of_translated_words(translate_copy, word_count, ciphered_text)
+            if num > num_max:
+                print "New best, num_words matched: %s" %num
+                translate[ciphered_letter] = deciphered_letter
+                num_max = num
+            else:
+                print "num_words match: %s <= num_max: %s" % (num, num_max)
+
+
+def decipher_encrypted_file():
     #try to keep memory usage < 1 GB
     quick = False
-    cheat = True
+    cheat = False
     true_translation = true_translation_dictionary()
     if quick:
         print "using 'quick' parameters"
-        word_length_max = 3
-        frequency_min = 1000
+        word_length_max = 5
+        frequency_min = 200
     else:
-        word_length_max = 10
+        word_length_max = 9
         frequency_min = 20
 
     print 'building word counter'
@@ -144,15 +148,11 @@ def declipher_encrypted_file():
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
     if cheat:
-        if False:
-            translate['l'] = 'e'
-            translate['c'] = 'a'
-            translate['e'] = 'x'
-            translate['x'] = 'f'
-            translate['a'] = 'c'
-            translate['h'] = 'i'
-            translate['u'] = 't'
-            translate['m'] = 'h'
+        for xx in xrange(10):
+            print "cheating"
+        if True:
+            translate['y'] = 'y'
+            translate['i'] = 'p'
         else:
             n_cheat = 5
             import random
@@ -162,14 +162,26 @@ def declipher_encrypted_file():
                 print 'cheating: %s-> %s' % (key, value)
                 translate[key] = value
 
-    pair_counts = make_pair_counter()
-    for ciphered_word in ciphered_words:
-        update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts)
-    total_counts = 0.0
-    for pair_key, counts in pair_counts.iteritems():
-        total_counts += counts
-    print "total matching word count: %s" % total_counts
-    normalize_pair_counts(pair_counts, niter=100)
+    n_iter = 30
+    pair_counts = get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
+                                           fragment_lookup, ciphered_text, iterations=n_iter)
+
+    results = []
+    for ciphered_letter in alphabet:
+        # delete each and try again to fix incorrect matches
+        print "deleted letter: %s" % ciphered_letter
+        if ciphered_letter not in translate:
+            continue
+        del translate[ciphered_letter]
+        pair_counts, entropy, max_like = \
+            get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
+                                                   fragment_lookup, ciphered_text,
+                                                   iterations=n_iter, top_start=20)
+        results.append((max_like, entropy))
+        print translate(ciphered_text)
+
+    print '\n------------\n'
+
     pair_count_items = [(pair_key, count) for pair_key, count in pair_counts.items()
                         if pair_key[0] in ciphered_text]
     pairs_sorted = sorted(pair_count_items, key=lambda x: -x[1])
@@ -177,8 +189,20 @@ def declipher_encrypted_file():
     for i, pair in enumerate(pairs_top):
         correct = pair[0][1] == true_translation[pair[0][0]]
         print i+1, pair, correct
-    return pair_counts, pairs_sorted
 
+    print translate(ciphered_text)
+
+    if True:
+        print 'print modiying each letter to maximize number of words'
+        modify_each_letter(translate, word_count, ciphered_text)
+
+    print 'Final solution\n-------------------\n'
+    for k, v in translate.items():
+        if k in ciphered_text:
+            print k, v, (v == true_translation[k])
+
+    max_like = get_maximum_likelihood_values(pair_counts, ciphered_text)
+    return pair_counts, max_like, translate, word_count
 
 if __name__ == "__main__":
     declipher_encrypted_file()
