@@ -157,27 +157,9 @@ def decipher_encrypted_file():
     ciphered_text = fileio.read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
-    n_iter = 30
     pair_counts, entropy, max_like = get_paircounts_translation_iteratively(
         ciphered_words, translate, word_count, fragment_lookup, ciphered_text,
-        iterations=n_iter)
-
-    if False:
-        results = []
-        for ciphered_letter in alphabet:
-            # delete each and try again to fix incorrect matches
-            print "deleted letter: %s" % ciphered_letter
-            if ciphered_letter not in translate:
-                continue
-            del translate[ciphered_letter]
-            pair_counts, entropy, max_like = \
-                get_paircounts_translation_iteratively(ciphered_words, translate, word_count,
-                                                       fragment_lookup, ciphered_text,
-                                                       iterations=n_iter, top_start=20)
-            results.append((max_like, entropy))
-            print translate(ciphered_text)
-
-        print '\n------------\n'
+        iterations=30)
 
     pair_count_items = [(pair_key, count) for pair_key, count in pair_counts.items()
                         if pair_key[0] in ciphered_text]
