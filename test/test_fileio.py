@@ -24,7 +24,8 @@ class TestReadCorpus(TestCase):
         self.assertTrue(line.endswith('carroll'))
         line = self.stream.next()
         self.assertEquals(line, '')
-        expected = 'this ebook is for the use of anyone anywhere at no cost and with'
+        expected = 'this ebook is for the use of anyone ' \
+                   'anywhere at no cost and with'
         line = self.stream.next()
         self.assertEquals(line, expected)
 

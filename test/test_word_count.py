@@ -3,13 +3,15 @@ from unittest import TestCase
 from collections import Counter
 from word_count import add_word_count_to_counter, process_word
 from word_count import build_word_count_from_corpus
-from word_count import word_to_list_of_all_fragments, word_list_to_fragment_lookup
+from word_count import word_to_list_of_all_fragments
+from word_count import word_list_to_fragment_lookup
 
 
 class TestAddWordCountToCounter(TestCase):
     def test_add_to_counter(self):
         counter = Counter()
-        add_word_count_to_counter("  he-llo there:,   I said hello\n\n", counter)
+        add_word_count_to_counter("  he-llo there:,   "
+                                  "I said hello\n\n", counter)
         expected_counter = Counter()
         expected_counter['hello'] = 2
         expected_counter['there'] = 1
@@ -65,7 +67,8 @@ class WordToListOfAllFragments(TestCase):
 
 class WordListToFragmentLookup(TestCase):
     def test_word_list_to_fragment_lookup(self):
-        word_list = ['and', 'are', 'any', 'thisisanabsurdlylongwordthatisfake']
+        word_list = ['and', 'are', 'any',
+                     'thisisanabsurdlylongwordthatisfake']
         lookup = word_list_to_fragment_lookup(word_list)
         # check explicitly that 'a__' matches three words
         self.assertEquals(lookup['a__'], ['and', 'are', 'any'])

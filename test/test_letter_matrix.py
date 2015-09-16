@@ -33,6 +33,5 @@ class TestNormalize(TestCase):
             self.assertTrue(abs(total-1.0) < self.tol)
 
 
-
 if __name__ == "__main__":
     unittest.main()

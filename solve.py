@@ -18,7 +18,8 @@ def all_possible_words(ciphered_word, translate, word_data):
 def update_paircounts(translate, ciphered_word, word_data, pair_counts):
     possible_words = all_possible_words(ciphered_word, translate, word_data)
     for possible_word in possible_words:
-        for ciphered_letter, possible_letter in zip(ciphered_word, possible_word):
+        for ciphered_letter, possible_letter in \
+                zip(ciphered_word, possible_word):
             pair_key = (ciphered_letter, possible_letter)
             counts = word_data['word_count'][possible_word]
             pair_counts[pair_key] += counts
@@ -104,8 +105,9 @@ def get_paircounts_translation_iteratively(translate, input_data, word_data):
         om = om_start - om_sub_per_iter
         top = int(top_start + iteration)
         logger.debug("occurrence_min: %s, top: %s" % (om, top))
-        translation_guess = get_translation_guess_from_max_like(max_like,
-                                                                occurrence_min=om, top=top)
+        translation_guess = \
+            get_translation_guess_from_max_like(max_like,
+                                                occurrence_min=om, top=top)
         for k, v in translation_guess.iteritems():
             if k in input_data['ciphered_text']:
                 translate[k] = v
@@ -128,8 +130,9 @@ def number_of_translated_words(translate, input_data, word_data):
     all_words = len(deciphered_words)
     logger.debug("n matched_words: %s, all_words: %s" %
                  (n_matched_words, all_words))
-    un_matched_ciphered_words = [word for word in ciphered_words
-                                 if translate(word) not in word_data['word_count']]
+    un_matched_ciphered_words = \
+        [word for word in ciphered_words
+         if translate(word) not in word_data['word_count']]
 
     unmatched_string = ' '.join(un_matched_ciphered_words)
     un_matched_ciphered_letters = sorted(
