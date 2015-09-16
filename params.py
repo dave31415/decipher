@@ -9,7 +9,7 @@ parameters = {
     'max_length_word_to_fragment': 9,
     'min_frequency_word_to_fragment': 6,
     'paircounts_solver_iterations': 30,
-    'paircounts_solver_num_top_start': 10,
+    'paircounts_solver_num_top_start': 15,
     'paircounts_solver_occurrence_min_start': 4,
     'paircounts_solver_occurrence_reduction_per_iteration': 0.2
 }
