@@ -22,7 +22,7 @@ def decipher_encrypted_file():
     solve.get_paircounts_translation_iteratively(
         ciphered_words, translate, word_count, fragment_lookup,
         ciphered_text)
-    for iter in xrange(30):
+    for iter in xrange(10):
         solve.modify_each_letter(translate, word_count, ciphered_text)
 
     logger.info('Final solution\n-------------------\n')

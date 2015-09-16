@@ -3,23 +3,41 @@ from params import alphabet, parameters
 from letter_matrix import make_pair_counter, normalize_pair_counts
 from translate import true_translation_dictionary
 import math
-from collections import Counter
 from logger import logger
+import analyze
 
 
-def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts):
+def num_all_possible_words_for_word_list(ciphered_words, translate, word_count, fragment_lookup):
+    num = 0.0
+    epsilon = 0.005
+    for ciphered_word in ciphered_words:
+        possible_words = all_possible_words(ciphered_word, translate, word_count, fragment_lookup)
+        frequencies = [word_count[word] for word in possible_words]
+        num += math.log(epsilon + sum(frequencies))
+    return num
+
+
+def all_possible_words(ciphered_word, translate, word_count, fragment_lookup):
     deciphered_word = translate(ciphered_word)
     if deciphered_word in word_count:
         possible_words = [deciphered_word]
     else:
         possible_words = fragment_lookup[deciphered_word]
+    return possible_words
 
+
+def scaling(x):
+    return x
+
+
+def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts):
+    possible_words = all_possible_words(ciphered_word, translate, word_count, fragment_lookup)
     for possible_word in possible_words:
         for ciphered_letter, possible_letter in zip(ciphered_word, possible_word):
             pair_key = (ciphered_letter, possible_letter)
             counts = word_count[possible_word]
             #can change the scaling
-            pair_counts[pair_key] += counts
+            pair_counts[pair_key] += scaling(counts)
 
 
 def get_normalized_paircounts(ciphered_words, translate, word_count,
@@ -27,9 +45,7 @@ def get_normalized_paircounts(ciphered_words, translate, word_count,
     pair_counts = make_pair_counter()
     for ciphered_word in ciphered_words:
         update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pair_counts)
-    total_counts = 0.0
-    for pair_key, counts in pair_counts.iteritems():
-        total_counts += counts
+
     normalize_pair_counts(pair_counts)
     return pair_counts
 
@@ -48,6 +64,28 @@ def get_maximum_likelihood_values(pair_counts, ciphered_text):
                 correct = true_translation[ciphered_letter] == deciphered_letter
                 max_like[ciphered_letter] = (deciphered_letter, like, occurrence, correct)
     return max_like
+
+
+def get_most_likely_values(pair_counts, ciphered_text):
+    true_translation = true_translation_dictionary()
+    top = 4
+    most_likely = {}
+    for ciphered_letter in alphabet:
+        letter_list = []
+        for deciphered_letter in alphabet:
+            pair_key = (ciphered_letter, deciphered_letter)
+            like = pair_counts[pair_key]
+            occurrence = ciphered_text.count(ciphered_letter)
+            correct = true_translation[ciphered_letter] == deciphered_letter
+            letter_list.append((deciphered_letter, like, occurrence, correct))
+        letter_list = sorted(letter_list, key=lambda x: -x[1])[0:top]
+        most_likely[ciphered_letter] = letter_list
+    for ciphered_letter in alphabet:
+        letter_list = most_likely[ciphered_letter]
+        correct = [item[3] for item in letter_list]
+        print ciphered_letter, correct, True in correct
+
+    return most_likely
 
 
 def get_translation_guess_from_max_like(max_like, occurrence_min=5, top=10):
@@ -85,34 +123,13 @@ def get_paircounts_translation_iteratively(ciphered_words, translate, word_count
                                                                 occurrence_min=om, top=top)
         for k, v in translation_guess.iteritems():
             if k in ciphered_text:
+                # TODO: check to make sure added letters do not block
                 translate[k] = v
         num_trans, un_matched_ciphered_letters = number_of_translated_words(translate, word_count, ciphered_text)
         logger.debug("num matched words: %s" % num_trans)
-
-
-def analyze_letters(matched_words, un_matched_words):
-    #debugging utility
-    matched_counter = Counter()
-    un_matched_counter = Counter()
-    for letter in ''.join(matched_words):
-        matched_counter[letter] += 1
-    for letter in ''.join(un_matched_words):
-        un_matched_counter[letter] += 1
-
-    alpha = 5.0
-    prior = 2.0
-    prob_wrong = {}
-    logger.debug("Prob that letters are wrong")
-    for letter in alphabet:
-        ratio = (alpha + matched_counter[letter])/(alpha + un_matched_counter[letter])
-        prob_wrong[letter] = 1.0/(1.0 + ratio*prior)
-    for letter, p_wrong in sorted(prob_wrong.items(), key=lambda x: -x[1]):
-        logger.debug("%s, prob_wrong=%s" % (letter, p_wrong))
-
-    logger.debug('most common matched letters')
-    logger.debug(matched_counter.most_common().__repr__())
-    logger.debug('most common un_matched letters')
-    logger.debug(un_matched_counter.most_common().__repr__())
+        if False:
+            analyze.show_translation(translate)
+            analyze.show_deciphered_text(translate)
 
 
 def number_of_translated_words(translate, word_count, ciphered_text):
@@ -126,7 +143,8 @@ def number_of_translated_words(translate, word_count, ciphered_text):
     un_matched_words = [word for word in deciphered_words if word not in word_count]
     un_matched_ciphered_words = [word for word in ciphered_words if translate(word) not in word_count]
 
-    if True:
+
+    if False:
         logger.debug("matched words")
         logger.debug("%s\n" % matched_words.__repr__())
         logger.debug("un-matched words")
@@ -148,8 +166,9 @@ def modify_each_letter(translate, word_count, ciphered_text):
             translate_copy[ciphered_letter] = deciphered_letter
             logger.debug("%s->%s" % (ciphered_letter, deciphered_letter))
             num, unmatched_letters = number_of_translated_words(translate_copy, word_count, ciphered_text)
+
             if num > num_max:
-                logger.debug("New best, num_words matched: %s" %num)
+                logger.debug("New best, num_words matched: %s" % num)
                 translate[ciphered_letter] = deciphered_letter
                 num_max = num
             else:

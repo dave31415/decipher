@@ -71,6 +71,3 @@ def read_translation_solution():
 
 
 
-
-
-
