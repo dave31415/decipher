@@ -11,5 +11,6 @@ parameters = {
     'paircounts_solver_iterations': 30,
     'paircounts_solver_num_top_start': 15,
     'paircounts_solver_occurrence_min_start': 4,
-    'paircounts_solver_occurrence_reduction_per_iteration': 0.2
+    'paircounts_solver_occurrence_reduction_per_iteration': 0.2,
+    'num_iterations_modify_letters': 10
 }

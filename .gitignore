@@ -1,7 +1,9 @@
 data/*
+cover/*
 *.pyc
 *~
 .idea/*
 *.log
 *.json
 *.txt
+.coverage
