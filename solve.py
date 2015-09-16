@@ -7,6 +7,13 @@ import analyze
 
 
 def all_possible_words(ciphered_word, translate, word_data):
+    """
+    :param ciphered_word: string
+    :param translate: Translation object
+    :param word_data: dictionary holding word count data
+    :return: all possible words given the constraint of the
+             partial Translation
+    """
     deciphered_word = translate(ciphered_word)
     if deciphered_word in word_data['word_count']:
         possible_words = [deciphered_word]
@@ -16,6 +23,14 @@ def all_possible_words(ciphered_word, translate, word_data):
 
 
 def update_paircounts(translate, ciphered_word, word_data, pair_counts):
+    """
+    Updates the paircount in-place
+    :param translate: Translation object
+    :param ciphered_word: string
+    :param word_data: dictionary holding word count data
+    :param pair_counts: pair count dictionary
+    :return: None
+    """
     possible_words = all_possible_words(ciphered_word, translate, word_data)
     for possible_word in possible_words:
         for ciphered_letter, possible_letter in \
@@ -26,6 +41,12 @@ def update_paircounts(translate, ciphered_word, word_data, pair_counts):
 
 
 def get_normalized_paircounts(translate, input_data, word_data):
+    """
+    :param translate: Translation object
+    :param input_data: dictionary holding the input data
+    :param word_data: dictionary holding word count data
+    :return: pair counts, normalized
+    """
     pair_counts = make_pair_counter()
     for ciphered_word in input_data['ciphered_words']:
         update_paircounts(translate, ciphered_word, word_data, pair_counts)
@@ -35,6 +56,13 @@ def get_normalized_paircounts(translate, input_data, word_data):
 
 
 def get_maximum_likelihood_values(pair_counts, input_data):
+    """
+    Get the maximum likelihood values from the pair_counts
+    for each letter
+    :param pair_counts: pair counts, normalized
+    :param input_data: dictionary holding the input data
+    :return: dictionary of maximum likelihood values
+    """
     true_translation = true_translation_dictionary()
     max_like = {}
     for ciphered_letter in alphabet:
@@ -52,7 +80,14 @@ def get_maximum_likelihood_values(pair_counts, input_data):
     return max_like
 
 
-def get_most_likely_values(pair_counts, ciphered_text):
+def get_most_likely_values(pair_counts, input_data):
+    """
+    Utility for getting a short list of likely values
+    currently used for debugging only
+    :param pair_counts: pair counts, normalized
+    :param ciphered_text:
+    :return:
+    """
     true_translation = true_translation_dictionary()
     top = 4
     most_likely = {}
@@ -61,7 +96,7 @@ def get_most_likely_values(pair_counts, ciphered_text):
         for deciphered_letter in alphabet:
             pair_key = (ciphered_letter, deciphered_letter)
             like = pair_counts[pair_key]
-            occurrence = ciphered_text.count(ciphered_letter)
+            occurrence = input_data['ciphered_text'].count(ciphered_letter)
             correct = true_translation[ciphered_letter] == deciphered_letter
             letter_list.append((deciphered_letter, like, occurrence, correct))
         letter_list = sorted(letter_list, key=lambda x: -x[1])[0:top]
@@ -75,6 +110,14 @@ def get_most_likely_values(pair_counts, ciphered_text):
 
 
 def get_translation_guess_from_max_like(max_like, occurrence_min=5, top=10):
+    """
+    Update the translation using the best determined letters
+    :param max_like: maximum likelihood dictionary
+    :param occurrence_min: minimum occurrance of letter in ciphered text
+                           to be considered
+    :param top: choose this many of the best letters
+    :return:
+    """
     items = [item for item in max_like.items() if item[1][2] >= occurrence_min]
     items_sorted = sorted(items, key=lambda x: -x[1][1])
     items_top = items_sorted[0: top]
@@ -82,6 +125,13 @@ def get_translation_guess_from_max_like(max_like, occurrence_min=5, top=10):
 
 
 def get_paircounts_translation_iteratively(translate, input_data, word_data):
+    """
+    Update the translation iteratively based on constrained letter frequency
+    :param translate: Translation object
+    :param input_data: dictionary holding the input data
+    :param word_data: dictionary holding word count data
+    :return:
+    """
     # number of total iterations
     iterations = parameters['paircounts_solver_iterations']
     # number of highest likelihood letters to select to be fixed after the
@@ -121,6 +171,13 @@ def get_paircounts_translation_iteratively(translate, input_data, word_data):
 
 
 def number_of_translated_words(translate, input_data, word_data):
+    """
+    Get the number of translated words
+    :param translate: Translation object
+    :param input_data: dictionary holding the input data
+    :param word_data: dictionary holding word count data
+    :return: tuple (number of matched words, unmatched ciphered letters)
+    """
     ciphered_words = input_data['ciphered_words']
     deciphered_words = [translate(word) for word in ciphered_words]
 
@@ -144,6 +201,13 @@ def number_of_translated_words(translate, input_data, word_data):
 
 
 def modify_each_letter(translate, input_data, word_data):
+    """
+    Update translation by modifying each letter to see if it improves
+    :param translate: Translation object
+    :param input_data: dictionary holding the input data
+    :param word_data: dictionary holding word count data
+    :return:
+    """
     num_max, un_matched_ciphered_letters = \
         number_of_translated_words(translate, input_data, word_data)
     for ciphered_letter in un_matched_ciphered_letters:

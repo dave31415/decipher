@@ -6,6 +6,9 @@ from word_count import process_word
 
 
 def get_word_data():
+    """
+    :return: dictionary that has word_count and fragment lookup
+    """
     word_count = build_word_count_from_corpus()
     frequency_min = parameters['min_frequency_word_to_fragment']
     word_count_smaller = {word: count for word, count in word_count.iteritems()
@@ -16,6 +19,10 @@ def get_word_data():
 
 
 def get_input_data():
+    """
+    :return: dictionary that has the cypher text and some items calculated from it
+             that are needed various places
+    """
     ciphered_text = read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
 

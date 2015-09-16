@@ -9,7 +9,11 @@ from logger import logger
 from word_data import get_input_data, get_word_data
 
 
-def decipher_encrypted_file():
+def decipher_file():
+    """
+    Main pipeline to decipher the file
+    :return:
+    """
     input_data = get_input_data()
     word_data = get_word_data()
 
@@ -30,7 +34,7 @@ def decipher_encrypted_file():
 
 if __name__ == "__main__":
     start = time.time()
-    translate_solution = decipher_encrypted_file()
+    translate_solution = decipher_file()
     true_translation = true_translation_dictionary()
     ciphered_text = fileio.read_ciphered_text()
     success = True

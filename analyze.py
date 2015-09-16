@@ -1,11 +1,17 @@
 # tools for analyzing current solution
+
 from params import alphabet, unknown_letter
 from logger import logger
 from fileio import read_ciphered_text
 
 
 def true_translation_dictionary():
-    # correct translation, for debugging, testing etc
+    """
+    :param string: any string
+    :param counter: an existing Counter object to be added to
+    :return:
+    correct translation, for debugging, testing etc
+    """
     translation_dict = {
         'a': 'c',
         'b': 'u',
@@ -39,11 +45,16 @@ def true_translation_dictionary():
 
 
 def show_translation(translate):
+    """
+    Displays information about the current translation
+    for debugging
+    :param translate:
+    """
     true_translation = true_translation_dictionary()
     for ciphered_letter in alphabet:
         solution = translate(ciphered_letter)
         truth = true_translation[ciphered_letter]
-        if (solution == truth):
+        if solution == truth:
             correct = "True"
         else:
             correct = " -False-"
@@ -54,6 +65,11 @@ def show_translation(translate):
 
 
 def show_deciphered_text(translate):
+    """
+    Displays the translated text
+    for debugging
+    :param translate:
+    """
     divider = "\n%s\n" % ("=" * 60)
     text = read_ciphered_text()
     deciphered_text = translate(text)
