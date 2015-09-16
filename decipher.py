@@ -11,32 +11,22 @@ from logger import logger
 
 
 def decipher_encrypted_file():
-    logger.debug("Starting decipher")
-    true_translation = true_translation_dictionary()
-    frequency_min = parameters['min_frequency_word_to_fragment']
-
-    logger.debug('building word counter')
     word_count = build_word_count_from_corpus()
-    logger.debug("words in word_count: %s" % len(word_count))
-    #compress it a bit
+    frequency_min = parameters['min_frequency_word_to_fragment']
     word_count_smaller = {word: count for word, count in word_count.iteritems()
                           if count >= frequency_min}
-    logger.debug("words in shortened word_count: %s" % len(word_count_smaller))
-    logger.debug("building fragment lookup")
     fragment_lookup = word_list_to_fragment_lookup(word_count_smaller.keys())
-    logger.debug("number of fragments: %s" % len(fragment_lookup))
-    logger.debug("reading and processing encrypted file")
     ciphered_text = fileio.read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     translate = Translator()
     solve.get_paircounts_translation_iteratively(
         ciphered_words, translate, word_count, fragment_lookup,
         ciphered_text)
-
-    logger.debug('modifying each letter to maximize number of words')
-    solve.modify_each_letter(translate, word_count, ciphered_text)
+    for iter in xrange(30):
+        solve.modify_each_letter(translate, word_count, ciphered_text)
 
     logger.info('Final solution\n-------------------\n')
+    true_translation = true_translation_dictionary()
     for k, v in translate.items():
         if k in ciphered_text:
             logger.info("%s, %s, %s" % (k, v, (v == true_translation[k])))

@@ -3,6 +3,7 @@ from params import alphabet, parameters
 from letter_matrix import make_pair_counter, normalize_pair_counts
 from translate import true_translation_dictionary
 import math
+from collections import Counter
 from logger import logger
 
 
@@ -17,6 +18,7 @@ def update_paircounts(ciphered_word, translate, word_count, fragment_lookup, pai
         for ciphered_letter, possible_letter in zip(ciphered_word, possible_word):
             pair_key = (ciphered_letter, possible_letter)
             counts = word_count[possible_word]
+            #can change the scaling
             pair_counts[pair_key] += counts
 
 
@@ -88,6 +90,31 @@ def get_paircounts_translation_iteratively(ciphered_words, translate, word_count
         logger.debug("num matched words: %s" % num_trans)
 
 
+def analyze_letters(matched_words, un_matched_words):
+    #debugging utility
+    matched_counter = Counter()
+    un_matched_counter = Counter()
+    for letter in ''.join(matched_words):
+        matched_counter[letter] += 1
+    for letter in ''.join(un_matched_words):
+        un_matched_counter[letter] += 1
+
+    alpha = 5.0
+    prior = 2.0
+    prob_wrong = {}
+    logger.debug("Prob that letters are wrong")
+    for letter in alphabet:
+        ratio = (alpha + matched_counter[letter])/(alpha + un_matched_counter[letter])
+        prob_wrong[letter] = 1.0/(1.0 + ratio*prior)
+    for letter, p_wrong in sorted(prob_wrong.items(), key=lambda x: -x[1]):
+        logger.debug("%s, prob_wrong=%s" % (letter, p_wrong))
+
+    logger.debug('most common matched letters')
+    logger.debug(matched_counter.most_common().__repr__())
+    logger.debug('most common un_matched letters')
+    logger.debug(un_matched_counter.most_common().__repr__())
+
+
 def number_of_translated_words(translate, word_count, ciphered_text):
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
     deciphered_words = [translate(word) for word in ciphered_words]
@@ -97,14 +124,14 @@ def number_of_translated_words(translate, word_count, ciphered_text):
     all_words = len(deciphered_words)
     logger.debug("n matched_words: %s, all_words: %s" % (n_matched_words, all_words))
     un_matched_words = [word for word in deciphered_words if word not in word_count]
-
     un_matched_ciphered_words = [word for word in ciphered_words if translate(word) not in word_count]
 
-    if False:
+    if True:
         logger.debug("matched words")
         logger.debug("%s\n" % matched_words.__repr__())
         logger.debug("un-matched words")
         logger.debug("%s\n" % un_matched_words.__repr__())
+        analyze_letters(matched_words, un_matched_words)
 
     unmatched_string = ' '.join(un_matched_ciphered_words)
     un_matched_ciphered_letters = sorted(list({letter for letter in unmatched_string if letter in alphabet}))
