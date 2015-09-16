@@ -49,14 +49,13 @@ def show_translation(translate):
             correct = " -False-"
 
         logger.debug("Solution: %s -> %s,  Truth: %s -> %s   %s" %
-                     (ciphered_letter, solution, ciphered_letter, truth, correct))
+                     (ciphered_letter, solution, ciphered_letter,
+                      truth, correct))
 
 
 def show_deciphered_text(translate):
-    divider = "\n%s\n" % ("="*60)
+    divider = "\n%s\n" % ("=" * 60)
     text = read_ciphered_text()
     deciphered_text = translate(text)
     logger.debug("%s\tDeciphered text%s" % (divider, divider))
     logger.debug("\n\n%s%s" % (deciphered_text, divider))
-
-

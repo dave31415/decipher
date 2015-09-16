@@ -54,7 +54,7 @@ def word_to_list_of_all_fragments(word):
     fragment_list = []
     n_letters = len(word)
     for n in xrange(n_letters):
-        for combo in combinations(range(n_letters), n+1):
+        for combo in combinations(range(n_letters), n + 1):
             word_as_list_copy = [w for w in word_as_list]
             for num in combo:
                 word_as_list_copy[num] = unknown_letter

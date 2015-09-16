@@ -33,17 +33,8 @@ def get_maximum_likelihood(log_prob, input_data):
             if log_like > log_like_max:
                 log_like_max = log_like
                 occurrence = input_data['ciphered_text'].count(ciphered_letter)
-                correct = true_translation[ciphered_letter] == deciphered_letter
-                max_like[ciphered_letter] = (deciphered_letter, log_like, occurrence, correct)
+                correct = true_translation[
+                    ciphered_letter] == deciphered_letter
+                max_like[ciphered_letter] = (
+                    deciphered_letter, log_like, occurrence, correct)
     return max_like
-
-
-
-
-
-
-
-
-
-
-

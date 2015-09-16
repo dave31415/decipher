@@ -68,6 +68,3 @@ def read_translation_solution():
         ciphered_letter, deciphered_letter = line.strip().split(' -> ')
         translate[ciphered_letter] = deciphered_letter
     return translate
-
-
-

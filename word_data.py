@@ -1,4 +1,5 @@
-from word_count import build_word_count_from_corpus, word_list_to_fragment_lookup
+from word_count import build_word_count_from_corpus
+from word_count import word_list_to_fragment_lookup
 from params import parameters
 from fileio import read_ciphered_text
 from word_count import process_word
@@ -18,6 +19,7 @@ def get_input_data():
     ciphered_text = read_ciphered_text()
     ciphered_words = [process_word(word) for word in ciphered_text.split()]
 
-    input_data = {'ciphered_text': ciphered_text, 'ciphered_words': ciphered_words}
+    input_data = {'ciphered_text': ciphered_text,
+                  'ciphered_words': ciphered_words}
 
     return input_data

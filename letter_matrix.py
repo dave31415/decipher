@@ -35,7 +35,7 @@ def normalize_rows(pair_count):
             pair_key = (encrypted_letter, letter)
             count = pair_count[pair_key]
             total += count
-        margin_error = abs(total-1.0)
+        margin_error = abs(total - 1.0)
         max_margin_error = max(max_margin_error, margin_error)
         for letter in alphabet:
             pair_key = (encrypted_letter, letter)
@@ -56,7 +56,7 @@ def normalize_cols(pair_count):
             pair_key = (encrypted_letter, letter)
             count = pair_count[pair_key]
             total += count
-        margin_error = abs(total-1.0)
+        margin_error = abs(total - 1.0)
         max_margin_error = max(max_margin_error, margin_error)
         for encrypted_letter in alphabet:
             pair_key = (encrypted_letter, letter)
