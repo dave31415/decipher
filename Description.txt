@@ -69,6 +69,12 @@ pypy decipher.py
 python takes 15.5 seconds
 pypy takes 6 seconds
 
+Output is written into the data directory, where the data also lives.
+(Data is not included in the git repo as it is a public repo).
+
+The tests can be run with
+nosetests test
+
 
 Ways to improve
 -------------------
