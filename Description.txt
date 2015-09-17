@@ -1,0 +1,108 @@
+The process, I implemented for solving the cypher is as follows.
+
+Preprocessing
+---------------
+
+The input file and corpus are processed the same way. They are read split
+into words on whitespace, coerced to lower-case and then non-alphabetical
+characters are removed.
+
+Building word counter and fragment lookup
+------------------------------------------
+
+The main technique used involves the creation of a data structure that
+can quickly look up word 'fragments' and find the words which match that
+pattern. For example "_ond_rf_l" is a fragment that matches the word
+"wonderful". This is done using a hash table formed from taking all the
+words in the corpus and replacing all combination of characters with
+the "unknown_character". I use the underscore for this blank character.
+
+With this data structure in place, I can find possible matches to partial
+translations easily. Then I can consider all words matching these patterns
+and keep track of which characters fill the missing blanks. I weight each
+letter by the frequency of each matching word based on the corpus. I start
+with an empty dictionary (all letters map to "_"). This process is iterated
+until all the letters are places in the translation dictionary.
+
+Deciding on best letters to add to the translation
+-------------------------------------------------------
+
+The process of deciding on the letters is done by first creating a 26x26
+matrix of letter co-occurrences for all words (weighted by frequency) that
+match the current partial translation. This matrix is then normalized by
+iterating between the row direction and column direction resulting in a
+'so called' stochastic matrix which is one where all columns and rows sum to
+unity. This iterative process is called the Sinkhorn-Knopp algorithm. That is
+done because we want to ensure that the letters in the translation map to
+all the letters in the alphabet rather than all mapping to a small subset
+of most frequent letters. It forces each ciphered letter to "fight" for each
+deciphered letter. The letters losing that fight must find another letter
+which is a likely match for them and not as much for other ciphered letters.
+
+Note that we start with no values in the translation dictionary so the
+first set word matches is simply based on the frequency of each letter in
+words of that size and in that position. E.g. the word "the" is the most
+common which results in the third letter of three letters words most often
+being 'e'. One letter words are almost always 'a' or 'i'.
+
+With each phase in the iteration, I choose the top 10 (a parameter) letters
+based on their likelihood and add these to the translation before continuing
+to the next iterations. I increase this number by one each iteration. In the
+end (as long as there are at least 13 iterations), all letters are placed.
+
+Dealing with incorrect letters
+-----------------------------------
+
+The above algorithm results in most of the letters in the translation being
+correct but some are incorrect. I fix these by modifying each in turn with
+another one to see if more words end up matching words in the corpus word
+counter. Iterating this procedure results in the bad letters being replaced by
+the right ones.
+
+Performance
+-------------
+The program can be run with
+python decipher.py
+Running it with pypy (if that's installed) is faster
+pypy decipher.py
+
+python takes 15.5 seconds
+pypy takes 6 seconds
+
+
+Ways to improve
+-------------------
+The idea of using the fragment lookup is probably one worth keeping. This
+is similar to using a tree data structure but hash tables, being a part of the
+language, are easier to implement in pure python. It is however a bit memory
+intensive though fits easily in memory and wouldn't grow much with a larger
+corpus.
+
+The procedure used for choosing new letters is rather ad hoc. This could
+certainly be improved through experimentation. There is no guarantee
+that you don't get stuck with bad initial letters and are not able
+to improve even with the letter modification procedure. If the text were
+smaller, that might happen.
+
+The letter modification (spell checker) could certainly be improved as well.
+
+Large words present problems because they are more likely to have a misplaced
+letter that 'blocks' it from suggesting the right next step. That could be
+improved by breaking long words up into sections or 'shingles'. Another way
+of doing this would be starting just with smaller words which is how I first
+did it without aid of computer.
+
+I can list some other possible approached that come to mind without doing any
+google searches on the problem. Dynamic programming. Word-graph data structures
+such as DAWGs or Tries. The following sites is a good source for some advanced
+data structure libraries with python bindings.
+
+Monte Carlo methods are certainly possible. Gibbs sampling for the next letter
+should work well enough. Probabilistic based approaches do not always work as
+well as expected for text modeling as assumptions about independance are
+seldom valid.
+
+Genetic algorithms might also be effective.
+
+
+

@@ -5,5 +5,4 @@ cover/*
 .idea/*
 *.log
 *.json
-*.txt
 .coverage
